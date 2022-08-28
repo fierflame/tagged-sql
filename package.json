@@ -1,0 +1,41 @@
+{
+  "name": "tagged-sql",
+  "private": true,
+  "version": "0.1.0",
+  "description": "用 ES 标签模板书写 sql 语句 \nWriting sql statement with ES6 tagged template strings",
+  "repository": {
+    "type": "git",
+    "url": "https://git@gitee.com/fierflame/tagged-sql.git"
+  },
+  "author": "猛火Fierflame",
+  "license": "MIT",
+  "keywords": [
+    "sql",
+    "template",
+    "tagged"
+  ],
+  "homepage": "https://git@gitee.com/fierflame/tagged-sql#git-readme",
+  "bugs": {
+    "url": "https://git@gitee.com/fierflame/tagged-sql/issues"
+  },
+  "scripts": {
+    "build": "rm dist -rf && mkdir dist && rollup -c",
+    "lint": "eslint --fix --ext .ts src",
+    "test": "./test/index.mjs"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.18.13",
+    "@babel/plugin-transform-typescript": "^7.18.12",
+    "@rollup/plugin-babel": "^5.3.1",
+    "@rollup/plugin-node-resolve": "^13.3.0",
+    "@rollup/plugin-replace": "^4.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.35.1",
+    "@typescript-eslint/parser": "^5.35.1",
+    "eslint": "^8.22.0",
+    "rollup": "^2.78.1",
+    "rollup-plugin-dts": "^4.2.2",
+    "rollup-plugin-terser": "^7.0.2",
+    "test": "^3.2.1",
+    "typescript": "^4.7.4"
+  }
+}
