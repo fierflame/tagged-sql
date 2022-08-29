@@ -96,7 +96,7 @@ declare namespace TaggedSql {
 		version: string;
 	}
 	export interface FieldConstructor {
-		(field: string, table?: string, global?: boolean): Field;
+		(field: string, table?: string | TaggedSql.Table, global?: boolean): Field;
 		new (field: string, table?: string, global?: boolean): Field;
 		prototype: Field;
 	}

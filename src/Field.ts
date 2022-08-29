@@ -1,16 +1,22 @@
 import type TaggedSql from '.';
+import  Table from './Table';
 
 const getId = (id: string) => `"${ id.replace(/"/g, '""') }"`;
 
 function Field(
-	this: any, field: string, table?: string, global?: boolean
+	this: any, field: string, table?: string | TaggedSql.Table, global?: boolean
 ): TaggedSql.Field {
 	const that = this instanceof Field
 		? this as TaggedSql.Field
 		: Object.create(Field.prototype) as TaggedSql.Field;
 	that.field = field;
-	that.table = table;
-	that.global = global;
+	if (table instanceof Table){
+		that.table = table.table;
+		that.global = typeof global === 'boolean' ? global : table.global;
+	} else {
+		that.table = table;
+		that.global = global;
+	}
 	return that;
 
 }
