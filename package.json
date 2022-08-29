@@ -1,7 +1,7 @@
 {
   "name": "tagged-sql",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "用 ES 标签模板书写 sql 语句 \nWriting sql statement with ES6 tagged template strings",
   "repository": {
     "type": "git",
@@ -19,7 +19,7 @@
     "url": "https://git@gitee.com/fierflame/tagged-sql/issues"
   },
   "scripts": {
-    "build": "rm dist -rf && mkdir dist && rollup -c",
+    "build": "rm dist -rf && mkdir dist && rollup -c && cp README.md dist",
     "lint": "eslint --fix --ext .ts src",
     "test": "./test/index.mjs"
   },
