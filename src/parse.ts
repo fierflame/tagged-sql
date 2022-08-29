@@ -18,7 +18,7 @@ export default function parse(
 			if (it) { end.push(it); }
 			continue;
 		}
-		if (item instanceof Sql.Field) {
+		if (item instanceof Sql.Field || item instanceof Sql.Table) {
 			template.push(end.join(' '));
 			values.push(item);
 			end = it ? [it] : [];

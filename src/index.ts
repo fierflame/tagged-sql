@@ -3,6 +3,7 @@ import defineProp from './defineProp';
 import Field from './Field';
 import link from './link';
 import parse from './parse';
+import Table from './Table';
 
 function getTemplate(v: string[] | TemplateStringsArray) {
 	return 'raw' in v && Array.isArray(v.raw) ? v.raw : v;
@@ -24,7 +25,7 @@ const TaggedSql: TaggedSql.Constructor = function (
 	return sql;
 } as any;
 defineGetter(TaggedSql.prototype, 'values', function ({_values}) {
-	return _values.filter(v => !(v instanceof TaggedSql.Field));
+	return _values.filter(v => !(v instanceof TaggedSql.Field || v instanceof TaggedSql.Table));
 });
 defineGetter(TaggedSql.prototype, 'isNull', function({_template}) {
 	return _template.length === 1 && /^\s*$/.test(_template[0]);
@@ -35,7 +36,7 @@ defineProp(TaggedSql.prototype, 'toString', function(separator, prefix) {
 	for (let i = 0; i < others.length; i++) {
 		const v = _values[i];
 		const it = others[i];
-		if (!(v instanceof TaggedSql.Field)) {
+		if (!(v instanceof TaggedSql.Field || v instanceof TaggedSql.Table)) {
 			template.push(it);
 			continue;
 		}
@@ -63,6 +64,7 @@ defineProp(TaggedSql.prototype, 'toTaggedSql', function() {
 	return this;
 });
 defineProp(TaggedSql, 'Field', Field);
+defineProp(TaggedSql, 'Table', Table);
 defineProp(TaggedSql, 'version', '__VERSION__');
 interface TaggedSql extends TaggedSql.Like {
 	readonly _template: readonly string[];
@@ -76,7 +78,7 @@ interface TaggedSql extends TaggedSql.Like {
 	): string;
 	glue(
 		this: TaggedSql,
-		...list: (TaggedSql.Like | string | TaggedSql.Field)[]
+		...list: (TaggedSql.Like | string | TaggedSql.Field | TaggedSql.Table)[]
 	): TaggedSql;
 }
 declare namespace TaggedSql {
@@ -84,12 +86,13 @@ declare namespace TaggedSql {
 		toTaggedSql(this: this): TaggedSql;
 	}
 	export interface Constructor {
-		(...list: (TaggedSql.Like | string | TaggedSql.Field)[]): TaggedSql;
+		(...list: (TaggedSql.Like | string | TaggedSql.Field | TaggedSql.Table)[]): TaggedSql;
 		(sql: string[] | TemplateStringsArray, ...values: any[]): TaggedSql;
-		new(...list: (TaggedSql.Like | string | TaggedSql.Field)[]): TaggedSql;
+		new(...list: (TaggedSql.Like | string | TaggedSql.Field | TaggedSql.Table)[]): TaggedSql;
 		new(sql: string[] | TemplateStringsArray, ...values: any[]): TaggedSql;
 		prototype: TaggedSql;
 		Field: FieldConstructor;
+		Table: TableConstructor;
 		version: string;
 	}
 	export interface FieldConstructor {
@@ -102,6 +105,16 @@ declare namespace TaggedSql {
 		table?: string;
 		global?: boolean;
 		toString(tablePrefix?: string): string;
+	}
+	export interface TableConstructor {
+		(table: string, global?: boolean): Table;
+		new (table: string, global?: boolean): Table;
+		prototype: Table;
+	}
+	export interface Table {
+		table: string;
+		global?: boolean;
+		toString(prefix?: string): string;
 	}
 	export interface SeparatorFn {
 		(value: any, index: number): string
