@@ -14,7 +14,7 @@ const {
 } = info;
 
 
-const beginYear = 2019;
+const beginYear = 2022;
 const year = new Date().getFullYear();
 
 const banner = `\
