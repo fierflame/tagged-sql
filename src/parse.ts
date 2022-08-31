@@ -18,7 +18,7 @@ export default function parse(
 			if (it) { end.push(it); }
 			continue;
 		}
-		if (item instanceof Sql.Field || item instanceof Sql.Table) {
+		if (item instanceof Sql.Field || item instanceof Sql.Table || item instanceof Sql.Id) {
 			template.push(end.join(' '));
 			values.push(item);
 			end = it ? [it] : [];
@@ -31,8 +31,10 @@ export default function parse(
 			end = it ? [it] : [];
 			continue;
 		}
-		const [first, ...s] = v._template;
+		// eslint-disable-next-line prefer-destructuring
+		const first = v._template[0];
 		if (first) { end.push(first); }
+		const s = v._template.slice(1);
 		if (s.length) {
 			template.push(end.join(' '));
 			const last = s.pop();

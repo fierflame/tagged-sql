@@ -13,7 +13,11 @@ export default function link(args: any[]): [string[], any[]] {
 			if (v) { end.push(v); }
 			continue;
 		}
-		if (item instanceof Sql.Field || item instanceof Sql.Table) {
+		if (typeof item === 'number') {
+			end.push(String(item));
+			continue;
+		}
+		if (item instanceof Sql.Field || item instanceof Sql.Table || item instanceof Sql.Id) {
 			template.push(end.join(' '));
 			values.push(item);
 			end = [];
