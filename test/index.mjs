@@ -25,15 +25,15 @@ test('用标签模板创建 sql 对象', async t => {
 	));
 });
 
-const table = Sql.Table('b');
-const gTable = Sql.Table('d', true);
+const table = Sql.Table('tableBooks');
+const gTable = Sql.Table('tableUsers', true);
 
-const nf1 = Sql.Field('a');
-const nf2 = Sql.Field('c');
+const nf1 = Sql.Field('mainName');
+const nf2 = Sql.Field('mainAuthor');
 const f1 = Sql.Field('a', table);
-const f2 = Sql.Field('c', 'd');
-const gf1 = Sql.Field('a', 'b', true);
-const gf2 = Sql.Field('c', gTable, true);
+const f2 = Sql.Field('c', 'tableGroups');
+const gf1 = Sql.Field('a', 'tableRoles', true);
+const gf2 = Sql.Field('c', gTable);
 
 test('参数形式连接 sql', async t => {
 	const sql = Sql('SELECT ', nf1, ',', nf2, ',', f1, ',', f2, ',', gf1, ',', gf2, Sql` FROM `, table, 'WHERE ', Sql`"a" = ${ 1 } AND "b" > 2`, 'OR ', Sql`"c" < ${ '2' }`, ' AND "d" > 3');
@@ -61,21 +61,33 @@ test('用标签模板连接 sql', async t => {
 
 test('sql 转字符串', async t => {
 	const sql = Sql`SELECT${ nf1 }, ${ nf2 }, ${ f1 }, ${ f2 }, ${ gf1 },${ gf2 } ${ Sql`FROM ${ table }   ` } JOIN ${ gTable } WHERE ${ Sql`"a" = ${ 1 } AND "b" > 2` } OR ${ Sql`"c" < ${ '2' }` }AND "d" > 3`;
-	await t.test('模板(默认)', () => assert.deepStrictEqual(
-		sql.toString(),
-		'SELECT "a" , "c" , "b"."a" , "d"."c" , "b"."a" , "d"."c" FROM "b" JOIN "d" WHERE "a" = ? AND "b" > 2 OR "c" < ? AND "d" > 3'
-	));
-	await t.test('模板(函数)', () => assert.deepStrictEqual(
-		sql.toString((_, i) => `$${ i + 1 }`),
-		'SELECT "a" , "c" , "b"."a" , "d"."c" , "b"."a" , "d"."c" FROM "b" JOIN "d" WHERE "a" = $1 AND "b" > 2 OR "c" < $2 AND "d" > 3'
+	await t.test('模板', () => assert.deepStrictEqual(
+		[
+			sql.toString('?'),
+			sql.toString((_, i) => `$${ i + 1 }`),
+			sql.toString('?', v => v.replace(/([A-Z])/g, '_$1').toLowerCase()),
+			sql.toString((_, i) => `$${ i + 1 }`, v => v.replace(/([A-Z])/g, '_$1').toLowerCase()),
+		],
+		[
+			'SELECT "mainName" , "mainAuthor" , "tableBooks"."a" , "tableGroups"."c" , "tableRoles"."a" , "tableUsers"."c" FROM "tableBooks" JOIN "tableUsers" WHERE "a" = ? AND "b" > 2 OR "c" < ? AND "d" > 3',
+			'SELECT "mainName" , "mainAuthor" , "tableBooks"."a" , "tableGroups"."c" , "tableRoles"."a" , "tableUsers"."c" FROM "tableBooks" JOIN "tableUsers" WHERE "a" = $1 AND "b" > 2 OR "c" < $2 AND "d" > 3',
+			'SELECT "main_name" , "main_author" , "table_books"."a" , "table_groups"."c" , "table_roles"."a" , "table_users"."c" FROM "table_books" JOIN "table_users" WHERE "a" = ? AND "b" > 2 OR "c" < ? AND "d" > 3',
+			'SELECT "main_name" , "main_author" , "table_books"."a" , "table_groups"."c" , "table_roles"."a" , "table_users"."c" FROM "table_books" JOIN "table_users" WHERE "a" = $1 AND "b" > 2 OR "c" < $2 AND "d" > 3',
+		],
 	));
 	await t.test('模板(默认)，带表格前缀', () => assert.deepStrictEqual(
-		sql.toString('?', 'tp_'),
-		'SELECT "a" , "c" , "tp_b"."a" , "tp_d"."c" , "b"."a" , "d"."c" FROM "tp_b" JOIN "d" WHERE "a" = ? AND "b" > 2 OR "c" < ? AND "d" > 3'
-	));
-	await t.test('模板(函数)，带表格前缀', () => assert.deepStrictEqual(
-		sql.toString((_, i) => `$${ i + 1 }`, 'tp_'),
-		'SELECT "a" , "c" , "tp_b"."a" , "tp_d"."c" , "b"."a" , "d"."c" FROM "tp_b" JOIN "d" WHERE "a" = $1 AND "b" > 2 OR "c" < $2 AND "d" > 3'
+		[
+			sql.toString('?', 'tp_'),
+			sql.toString((_, i) => `$${ i + 1 }`, 'tp_'),
+			sql.toString('?', v => v.replace(/([A-Z])/g, '_$1').toLowerCase(), 'tp_'),
+			sql.toString((_, i) => `$${ i + 1 }`, 'tp_', v => v.replace(/([A-Z])/g, '_$1').toLowerCase()),
+		],
+		[
+			'SELECT "mainName" , "mainAuthor" , "tp_tableBooks"."a" , "tp_tableGroups"."c" , "tableRoles"."a" , "tableUsers"."c" FROM "tp_tableBooks" JOIN "tableUsers" WHERE "a" = ? AND "b" > 2 OR "c" < ? AND "d" > 3',
+			'SELECT "mainName" , "mainAuthor" , "tp_tableBooks"."a" , "tp_tableGroups"."c" , "tableRoles"."a" , "tableUsers"."c" FROM "tp_tableBooks" JOIN "tableUsers" WHERE "a" = $1 AND "b" > 2 OR "c" < $2 AND "d" > 3',
+			'SELECT "main_name" , "main_author" , "tp_table_books"."a" , "tp_table_groups"."c" , "table_roles"."a" , "table_users"."c" FROM "tp_table_books" JOIN "table_users" WHERE "a" = ? AND "b" > 2 OR "c" < ? AND "d" > 3',
+			'SELECT "main_name" , "main_author" , "tp_table_books"."a" , "tp_table_groups"."c" , "table_roles"."a" , "table_users"."c" FROM "tp_table_books" JOIN "table_users" WHERE "a" = $1 AND "b" > 2 OR "c" < $2 AND "d" > 3',
+		],
 	));
 	await t.test('内容', () => assert.deepStrictEqual(
 		sql.values,
