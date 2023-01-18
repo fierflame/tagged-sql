@@ -2,9 +2,7 @@ import type TaggedSql from '.';
 import defineProp from './defineProp';
 import getId from './getId';
 import Id from './Id';
-import isFunction from './isFunction';
-import isString from './isString';
-import  Table from './Table';
+import Table from './Table';
 
 
 function Field(
@@ -31,23 +29,22 @@ function Field(
 	return that;
 
 }
-defineProp(Field.prototype, 'toString', function(
+defineProp(Field.prototype as TaggedSql.Field, 'toString', function(
 	this: TaggedSql.Field,
-	...options: (string | TaggedSql.Transformer | undefined)[]
 ): string {
-	let {table, field} = this;
-	if (table && !this.global) {
-		const prefix = options.find(isString) as string | undefined;
-		if (prefix) {
-			table = `${ prefix }${ table }`;
-		}
-	}
-	const transformer = options.find(isFunction) as TaggedSql.Transformer | undefined;
-	if (transformer) {
-		field = transformer(field, 'field');
-		if (table) { table = transformer(table, 'table'); }
-	}
+	const {table, field} = this;
 	return table ? `${ getId(table) }.${ getId(field) }` : getId(field);
 });
 
+defineProp(Table.prototype as TaggedSql.Field, 'transform', function (
+	this: TaggedSql.Field,
+	transformer: TaggedSql.Transformer,
+): TaggedSql.Field {
+	const { field, table, global } = this;
+	return Field(
+		transformer(field, 'field'),
+		table ? transformer(table, 'table', global) : undefined,
+		global,
+	);
+});
 export default Field as TaggedSql.FieldConstructor;

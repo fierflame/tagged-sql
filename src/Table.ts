@@ -2,8 +2,6 @@ import type TaggedSql from '.';
 import defineProp from './defineProp';
 import getId from './getId';
 import Id from './Id';
-import isFunction from './isFunction';
-import isString from './isString';
 
 
 function Table(
@@ -20,22 +18,18 @@ function Table(
 	that.global = global;
 	return that;
 }
-defineProp(Table.prototype, 'toString', function(
+defineProp(Table.prototype as TaggedSql.Table, 'toString', function(
 	this: TaggedSql.Table,
-	...options: (string | TaggedSql.Transformer | undefined)[]
 ): string {
-	let {table} = this;
-	if (!this.global) {
-		const prefix = options.find(isString) as string | undefined;
-		if (isString(prefix)) {
-			table = `${ prefix }${ table }`;
-		}
-	}
-	const transformer = options.find(isFunction) as TaggedSql.Transformer | undefined;
-	if (transformer) {
-		table = transformer(table, 'table');
-	}
-	return getId(table);
+	return getId(this.table);
+});
+
+defineProp(Table.prototype as TaggedSql.Table, 'transform', function(
+	this: TaggedSql.Table,
+	transformer: TaggedSql.Transformer,
+): TaggedSql.Table {
+	const {table, global} = this;
+	return Table(transformer(table, 'table', global), global);
 });
 
 export default Table as TaggedSql.TableConstructor;
