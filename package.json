@@ -19,7 +19,7 @@
     "url": "https://gitee.com/fierflame/tagged-sql/issues"
   },
   "scripts": {
-    "build": "rm dist -rf && mkdir dist && rollup -c && cp README.md dist",
+    "build": "rm dist -rf && mkdir dist && rollup -c && cp README.md LICENSE dist",
     "lint": "eslint --fix --ext .ts src",
     "test": "./test/index.mjs"
   },

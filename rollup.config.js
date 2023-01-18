@@ -37,6 +37,17 @@ fsFn.writeFileSync('dist/package.json', JSON.stringify({
 	jsdelivr: `${ outputFile }.js`,
 	dependencies, engines,
 	description, keywords, author, license, homepage, repository, bugs,
+	exports: {
+		'.': {
+			node: `./${ outputFile }.cjs`,
+			types: `./${ outputFile }.d.ts`,
+			module: `./${ outputFile }.mjs`,
+			browser: `./${ outputFile }.min.js`,
+			unpkg: `./${ outputFile }.js`,
+			jsdelivr: `./${ outputFile }.js`,
+		},
+		'./package.json': './package.json',
+	},
 }, null, 2));
 const input = 'src/index.ts';
 const output = `dist/${ outputFile }`;
