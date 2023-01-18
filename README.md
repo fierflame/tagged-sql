@@ -82,13 +82,14 @@ mysql.query(`SELECT "date" FROM "books" WHERE "books"."name" = ? AND "books"."au
 ------------------------------------------
 
 ```js
+bookSqlWithPrefix.transform((v, t, g) => t !== 'table' || g ? v : `tp_${ v }`)
 // postgres: 
-pg.query(bookSql.toString((_, i) => `$${ i + 1 }`, 'tp_'), bookSql.values)
+pg.query(bookSqlWithPrefix.toString((_, i) => `$${ i + 1 }`), bookSql.values)
 // 等价于 is equivalent to
 pg.query(`SELECT "date" FROM "tp_books" WHERE "tp_books"."name" = $1 AND "tp_books"."author" = $2`, ['Help Of TaggedSql', 'NyLoong'])
 
 // mysql: 
-mysql.query(bookSql.toString('?', 'tp_'), bookSql.values)
+mysql.query(bookSqlWithPrefix.toString('?'), bookSql.values)
 // 等价于 is equivalent to
 mysql.query(`SELECT "date" FROM "tp_books" WHERE "tp_books"."name" = ? AND "tp_books"."author" = ?`, ['Help Of TaggedSql', 'NyLoong'])
 ```
