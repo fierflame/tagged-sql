@@ -1,10 +1,9 @@
 import defineProp from './defineProp';
 
-export default function defineGetter<T extends object, K extends keyof T>(
-	target: T,
-	name: K,
-	get: (sql: T) => T[K]
-) {
+export default function defineGetter<
+	T extends object,
+	K extends keyof T,
+>(target: T, name: K, get: (sql: T) => T[K]) {
 	Reflect.defineProperty(target, name, {
 		get(this: T) {
 			const value = get(this);

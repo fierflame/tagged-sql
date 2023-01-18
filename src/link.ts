@@ -1,4 +1,5 @@
 import Sql from '.';
+import isIdLike from './isIdLike';
 import rmSpaces from './rmSpaces';
 import toSql from './toSql';
 
@@ -17,7 +18,7 @@ export default function link(args: any[]): [string[], any[]] {
 			end.push(String(item));
 			continue;
 		}
-		if (item instanceof Sql.Field || item instanceof Sql.Table || item instanceof Sql.Id) {
+		if (isIdLike(item)) {
 			template.push(end.join(' '));
 			values.push(item);
 			end = [];

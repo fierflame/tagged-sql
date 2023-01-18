@@ -1,4 +1,5 @@
 import Sql from '.';
+import isIdLike from './isIdLike';
 import rmSpaces from './rmSpaces';
 import toSql from './toSql';
 
@@ -18,7 +19,7 @@ export default function parse(
 			if (it) { end.push(it); }
 			continue;
 		}
-		if (item instanceof Sql.Field || item instanceof Sql.Table || item instanceof Sql.Id) {
+		if (isIdLike(item)) {
 			template.push(end.join(' '));
 			values.push(item);
 			end = it ? [it] : [];

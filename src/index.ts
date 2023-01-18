@@ -2,6 +2,7 @@ import defineGetter from './defineGetter';
 import defineProp from './defineProp';
 import Field from './Field';
 import Id from './Id';
+import isIdLike from './isIdLike';
 import link from './link';
 import parse from './parse';
 import Table from './Table';
@@ -10,46 +11,46 @@ function getTemplate(v: string[] | TemplateStringsArray) {
 	return 'raw' in v && Array.isArray(v.raw) ? v.raw : v;
 }
 
-const TaggedSql: TaggedSql.Constructor = function (
+const Sql: Sql.Constructor = function (
 	this: any,
 	...args: any[]
-): TaggedSql {
-	const sql = this instanceof TaggedSql
+): Sql {
+	const sql = this instanceof Sql
 		? this
-		: Object.create(TaggedSql.prototype) as TaggedSql;
+		: Object.create(Sql.prototype) as Sql;
 	const result: [string[], any[]] =
 		Array.isArray(args[0])
 			? parse(getTemplate(args[0]), args.slice(1))
-			: args.length ? link(args) : [[''],  []];
+			: args.length ? link(args) : [[''], []];
 	defineProp(sql, '_template', result[0]);
 	defineProp(sql, '_values', result[1]);
 	return sql;
 } as any;
-defineGetter(TaggedSql.prototype, 'values', function ({_values}) {
-	return _values.filter(v => !(v instanceof TaggedSql.Field || v instanceof TaggedSql.Table || v instanceof TaggedSql.Id));
+defineGetter(Sql.prototype, 'values', function ({_values}) {
+	return _values.filter(v => !isIdLike(v));
 });
-defineGetter(TaggedSql.prototype, 'isNull', function({_template}) {
+defineGetter(Sql.prototype, 'isNull', function({_template}) {
 	return _template.length === 1 && /^\s*$/.test(_template[0]);
 });
-defineProp(TaggedSql.prototype, 'toString', function(
-	this: TaggedSql,
-	separator?: TaggedSql.Separator,
+defineProp(Sql.prototype, 'toString', function(
+	this: Sql,
+	separator?: Sql.Separator,
 ) {
 	const { _values} = this;
-	// eslint-disable-next-line prefer-destructuring
-	const first = this._template[0];
 	const others = this._template.slice(1);
-	const template: string[] = [first];
+	const template: string[] = [this._template[0]];
 
 	for (let i = 0; i < others.length; i++) {
 		const v = _values[i];
 		const it = others[i];
-		if (!(v instanceof Field || v instanceof Table || v instanceof Id)) {
+		if (!isIdLike(v)) {
 			template.push(it);
 			continue;
 		}
 		template.push(
-			[template.pop(), v.toString(), it].filter(Boolean).join(' '),
+			[
+				template.pop(), v.toString(), it,
+			].filter(Boolean).join(' '),
 		);
 	}
 	if (typeof separator !== 'function') {
@@ -63,69 +64,83 @@ defineProp(TaggedSql.prototype, 'toString', function(
 	}
 	return strings.join(' ');
 });
-defineProp(TaggedSql.prototype, 'transform', function(
-	this: TaggedSql,
-	transformer: TaggedSql.Transformer
+defineProp(Sql.prototype, 'transform', function(
+	this: Sql,
+	transformer: Sql.Transformer,
 ) {
 	const { _values, _template } = this;
-	const sql = Object.create(TaggedSql.prototype) as TaggedSql;
+	const sql = Object.create(Sql.prototype) as Sql;
 	defineProp(sql, '_template', [..._template]);
 	defineProp(sql, '_values', _values.map(v => {
-		if (v instanceof Id || v instanceof Field || v instanceof Table) {
+		if (isIdLike(v)) {
 			return v.transform(transformer);
 		}
 		return v;
 	}));
 	return sql;
 });
-defineProp(TaggedSql.prototype, 'glue', function(...list) {
+defineProp(Sql.prototype, 'glue', function(...list) {
 	for (let i = list.length - 1; i > 0; i--) {
 		list.splice(i, 0, this);
 	}
-	return TaggedSql('', ...list);
+	return Sql('', ...list);
 });
-defineProp(TaggedSql.prototype, 'toTaggedSql', function() {
+defineProp(Sql.prototype, 'toTaggedSql', function() {
 	return this;
 });
-defineProp(TaggedSql, 'Field', Field);
-defineProp(TaggedSql, 'Id', Id);
-defineProp(TaggedSql, 'Table', Table);
-defineProp(TaggedSql, 'version', '__VERSION__');
-interface TaggedSql extends TaggedSql.Like {
+defineProp(Sql, 'Field', Field);
+defineProp(Sql, 'Id', Id);
+defineProp(Sql, 'Table', Table);
+defineProp(Sql, 'version', '__VERSION__');
+interface Sql extends Sql.Like {
 	readonly _template: readonly string[];
 	readonly _values: readonly any[];
 	readonly values: readonly any[];
 	readonly isNull: boolean;
-	transform(this: TaggedSql, transformer: TaggedSql.Transformer): TaggedSql;
-	toString(this: TaggedSql, separator?: TaggedSql.Separator): string;
-	glue(this: TaggedSql, ...list: TaggedSql.Item[]): TaggedSql;
+	transform(this: Sql, transformer: Sql.Transformer): Sql;
+	toString(this: Sql, separator?: Sql.Separator): string;
+	glue(this: Sql, ...list: Sql.Item[]): Sql;
 }
-declare namespace TaggedSql {
+declare namespace Sql {
 	export interface Like {
-		toTaggedSql(this: this): TaggedSql;
+		toTaggedSql(this: this): Sql;
 	}
 	export type Item =
 		| string
 		| number
-		| TaggedSql.Like
-		| TaggedSql.Id
-		| TaggedSql.Field
-		| TaggedSql.Table
+		| Like
+		| Id
+		| Field
+		| Table
 		| undefined;
 	export interface Constructor {
-		(...list: Item[]): TaggedSql;
-		(sql: string[] | TemplateStringsArray, ...values: any[]): TaggedSql;
-		new(...list: Item[]): TaggedSql;
-		new(sql: string[] | TemplateStringsArray, ...values: any[]): TaggedSql;
-		prototype: TaggedSql;
+		(...list: Item[]): Sql;
+		(
+			sql: string[] | TemplateStringsArray,
+			...values: any[]
+		): Sql;
+		new(...list: Item[]): Sql;
+		new(
+			sql: string[] | TemplateStringsArray,
+			...values: any[]
+		): Sql;
+		prototype: Sql;
 		Field: FieldConstructor;
 		Table: TableConstructor;
 		Id: IdConstructor;
 		version: string;
 	}
 	export interface FieldConstructor {
-		(field: string, table?: string | TaggedSql.Table, global?: boolean): Field;
-		new (field: string, table?: string, global?: boolean): Field;
+		(
+			field: string,
+			table?: string | Table,
+			global?: boolean,
+		): Field;
+		new(
+			field: string,
+			table?: string,
+			global?: boolean,
+		): Field;
 		prototype: Field;
 	}
 	export interface Field {
@@ -137,7 +152,7 @@ declare namespace TaggedSql {
 	}
 	export interface TableConstructor {
 		(table: string, global?: boolean): Table;
-		new (table: string, global?: boolean): Table;
+		new(table: string, global?: boolean): Table;
 		prototype: Table;
 	}
 	export interface Table {
@@ -148,7 +163,7 @@ declare namespace TaggedSql {
 	}
 	export interface IdConstructor {
 		(id: string, group?: string): Id;
-		new (id: string, group?: string): Id;
+		new(id: string, group?: string): Id;
 		prototype: Id;
 	}
 	export interface Id {
@@ -158,7 +173,11 @@ declare namespace TaggedSql {
 		toString(): string;
 	}
 	export interface Transformer {
-		(id: string, group?: string, global?: boolean): string
+		(
+			id: string,
+			group?: string,
+			global?: boolean,
+		): string
 
 	}
 	export interface SeparatorFn {
@@ -166,4 +185,4 @@ declare namespace TaggedSql {
 	}
 	export type Separator = string | SeparatorFn;
 }
-export default TaggedSql;
+export default Sql;
