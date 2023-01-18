@@ -1,6 +1,6 @@
 #!/bin/env node
 import assert from 'node:assert';
-import test from 'test';
+import test from 'node:test';
 import Sql from 'tagged-sql';
 test('参数形式创建 sql 对象', async t => {
 	const sql = Sql('SElECT ', '"name"', 'FROM', '"table"');
@@ -65,8 +65,8 @@ test('sql 转字符串', async t => {
 		[
 			sql.toString('?'),
 			sql.toString((_, i) => `$${ i + 1 }`),
-			sql.toString('?', v => v.replace(/([A-Z])/g, '_$1').toLowerCase()),
-			sql.toString((_, i) => `$${ i + 1 }`, v => v.replace(/([A-Z])/g, '_$1').toLowerCase()),
+			sql.transform(v => v.replace(/([A-Z])/g, '_$1').toLowerCase()).toString('?'),
+			sql.transform(v => v.replace(/([A-Z])/g, '_$1').toLowerCase()).toString((_, i) => `$${ i + 1 }`),
 		],
 		[
 			'SELECT "mainName" , "mainAuthor" , "tableBooks"."a" , "tableGroups"."c" , "tableRoles"."a" , "tableUsers"."c" FROM "tableBooks" JOIN "tableUsers" WHERE "a" = ? AND "b" > 2 OR "c" < ? AND "d" > 3',
@@ -77,10 +77,10 @@ test('sql 转字符串', async t => {
 	));
 	await t.test('模板(默认)，带表格前缀', () => assert.deepStrictEqual(
 		[
-			sql.toString('?', 'tp_'),
-			sql.toString((_, i) => `$${ i + 1 }`, 'tp_'),
-			sql.toString('?', v => v.replace(/([A-Z])/g, '_$1').toLowerCase(), 'tp_'),
-			sql.toString((_, i) => `$${ i + 1 }`, 'tp_', v => v.replace(/([A-Z])/g, '_$1').toLowerCase()),
+			sql.transform((v, t, g) => t !== 'table' || g ? v : `tp_${ v }`).toString('?'),
+			sql.transform((v, t, g) => t !== 'table' || g ? v : `tp_${ v }`).toString((_, i) => `$${ i + 1 }`),
+			sql.transform((v, t, g) => (t !== 'table' || g ? v : `tp_${ v }`).replace(/([A-Z])/g, '_$1').toLowerCase()).toString('?'),
+			sql.transform((v, t, g) => (t !== 'table' || g ? v : `tp_${ v }`).replace(/([A-Z])/g, '_$1').toLowerCase()).toString((_, i) => `$${ i + 1 }`),
 		],
 		[
 			'SELECT "mainName" , "mainAuthor" , "tp_tableBooks"."a" , "tp_tableGroups"."c" , "tableRoles"."a" , "tableUsers"."c" FROM "tp_tableBooks" JOIN "tableUsers" WHERE "a" = ? AND "b" > 2 OR "c" < ? AND "d" > 3',
