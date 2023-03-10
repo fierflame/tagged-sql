@@ -94,3 +94,24 @@ test('sql 转字符串', async t => {
 		[1, '2']
 	));
 });
+
+test('Table 的别名与字段方法', async t => {
+	const t1 = Sql.Table('t1');
+	const t2 = t1.as('t2');
+	const f1 = t1.field('f1');
+	const f2 = t2.field('f2');
+	function transformer(v, t, g) {
+		return `${ t }_${ v }`;
+	}
+	assert.deepStrictEqual([
+		t1.transform(transformer).toString(),
+		t2.transform(transformer).toString(),
+		f1.transform(transformer).toString(),
+		f2.transform(transformer).toString(),
+	], [
+		'"table_t1"',
+		'"table_t1" AS "alias_t2"',
+		'"table_t1"."field_f1"',
+		'"alias_t2"."field_f2"',
+	]);
+});
