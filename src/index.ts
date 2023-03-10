@@ -132,13 +132,13 @@ declare namespace Sql {
 	}
 	export interface FieldConstructor {
 		(
-			field: string,
-			table?: string | Table,
+			field: string | Sql.Id,
+			table?: string | Table | Sql.Id,
 			global?: boolean,
 		): Field;
 		new(
-			field: string,
-			table?: string,
+			field: string | Sql.Id,
+			table?: string | Table | Sql.Id,
 			global?: boolean,
 		): Field;
 		prototype: Field;
@@ -147,19 +147,25 @@ declare namespace Sql {
 		field: string;
 		table?: string;
 		global?: boolean;
+		alias?: boolean;
 		transform(transformer: Transformer): Field;
 		toString(): string;
 	}
 	export interface TableConstructor {
-		(table: string, global?: boolean): Table;
-		new(table: string, global?: boolean): Table;
+		(table: string | Id, global?: boolean): Table;
+		new(table: string | Id, global?: boolean): Table;
+		(table: string | Id, alias: string | Id, global?: boolean): Table;
+		new(table: string | Id, alias: string | Id, global?: boolean): Table;
 		prototype: Table;
 	}
 	export interface Table {
 		table: string;
+		alias: string;
 		global?: boolean;
+		field(field: string): Field;
 		transform(transformer: Transformer): Table;
 		toString(): string;
+		as(alias: string): Table;
 	}
 	export interface IdConstructor {
 		(id: string, group?: string): Id;

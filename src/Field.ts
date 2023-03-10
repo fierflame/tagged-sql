@@ -19,20 +19,29 @@ const Field: Sql.FieldConstructor = function (
 		that.field = field;
 	}
 	if (table instanceof Table){
-		that.table = table.table;
+		const { alias } = table;
+		if (alias) {
+			that.table = alias;
+			that.alias = true;
+		} else {
+			that.table = table.table;
+		}
 		that.global = typeof global === 'boolean'
 			? global
 			: table.global;
 	} else if (table instanceof Id){
 		that.table = table.id;
 		that.global = global;
+		if (table.group === 'alias') {
+			this.alias = true;
+		}
 	} else {
 		that.table = table;
 		that.global = global;
 	}
 	return that;
-
 } as any;
+
 defineProp(Field.prototype, 'toString', function(
 	this: Sql.Field,
 ): string {
@@ -44,11 +53,18 @@ defineProp(Field.prototype, 'transform', function(
 	this: Sql.Field,
 	transformer: Sql.Transformer,
 ): Sql.Field {
-	const { field, table, global } = this;
-	return Field(
-		transformer(field, 'field'),
-		table ? transformer(table, 'table', global) : undefined,
-		global,
-	);
+	const { field, table, alias, global } = this;
+	const that = Object.create(Field.prototype) as Sql.Field;
+	that.field = transformer(field, 'field');
+	that.alias = alias;
+	if (!table) { return that; }
+	if (alias) {
+		that.table = transformer(table, 'alias');
+	} else {
+		that.table = transformer(table, 'table', global);
+	}
+	that.global = global;
+	return that;
 });
-export default Field as Sql.FieldConstructor;
+
+export default Field;
