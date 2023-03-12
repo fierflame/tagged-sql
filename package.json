@@ -1,7 +1,7 @@
 {
   "name": "tagged-sql",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "用 ES 标签模板书写 sql 语句 \nWriting sql statement with ES6 tagged template strings",
   "repository": {
     "type": "git",
