@@ -3,6 +3,7 @@ import defineProp from './defineProp';
 import Field from './Field';
 import Id from './Id';
 import isIdLike from './isIdLike';
+import isLike from './isLike';
 import link from './link';
 import parse from './parse';
 import Table from './Table';
@@ -88,10 +89,13 @@ defineProp(Sql.prototype, 'glue', function(...list) {
 defineProp(Sql.prototype, 'toTaggedSql', function() {
 	return this;
 });
+
 defineProp(Sql, 'Field', Field);
 defineProp(Sql, 'Id', Id);
 defineProp(Sql, 'Table', Table);
+defineProp(Sql, 'isLike', isLike);
 defineProp(Sql, 'version', '__VERSION__');
+
 interface Sql extends Sql.Like {
 	readonly _template: readonly string[];
 	readonly _values: readonly any[];
@@ -128,6 +132,7 @@ declare namespace Sql {
 		Field: FieldConstructor;
 		Table: TableConstructor;
 		Id: IdConstructor;
+		isLike(v: any): v is Like;
 		version: string;
 	}
 	export interface FieldConstructor {
