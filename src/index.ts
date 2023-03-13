@@ -107,7 +107,7 @@ interface Sql extends Sql.Like {
 }
 declare namespace Sql {
 	export interface Like {
-		toTaggedSql(this: this): Sql;
+		toTaggedSql(this: this): Sql | Sql.Id | Sql.Table | Sql.Field;
 	}
 	export type Item =
 		| string

@@ -1,5 +1,6 @@
 import Sql from '.';
 import isIdLike from './isIdLike';
+import isLike from './isLike';
 import rmSpaces from './rmSpaces';
 import toSql from './toSql';
 
@@ -24,7 +25,19 @@ export default function link(args: any[]): [string[], any[]] {
 			end = [];
 			continue;
 		}
-		const sql = toSql(item);
+		if (!isLike(item)) { continue; }
+		const sql = item.toTaggedSql();
+		if (typeof sql === 'string') {
+			const v = rmSpaces(sql);
+			if (v) { end.push(v); }
+			continue;
+		}
+		if (isIdLike(sql)) {
+			template.push(end.join(' '));
+			values.push(sql);
+			end = [];
+			continue;
+		}
 		if (!(sql instanceof Sql)) { continue; }
 		const {_template} = sql;
 		// eslint-disable-next-line prefer-destructuring

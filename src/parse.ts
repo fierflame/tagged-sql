@@ -1,7 +1,7 @@
 import Sql from '.';
 import isIdLike from './isIdLike';
+import isLike from './isLike';
 import rmSpaces from './rmSpaces';
-import toSql from './toSql';
 
 export default function parse(
 	t: readonly string[],
@@ -19,14 +19,18 @@ export default function parse(
 			if (it) { end.push(it); }
 			continue;
 		}
-		if (isIdLike(item)) {
+		if (isIdLike(item) || !isLike(item)) {
 			template.push(end.join(' '));
 			values.push(item);
 			end = it ? [it] : [];
 			continue;
 		}
-		const v = toSql(item);
-		if (!(v instanceof Sql)) {
+		const v = item.toTaggedSql();
+		if (typeof v === 'string') {
+			if (v) { end.push(v); }
+			if (it) { end.push(it); }
+		}
+		if (isIdLike(v) || !(v instanceof Sql)) {
 			template.push(end.join(' '));
 			values.push(v);
 			end = it ? [it] : [];
